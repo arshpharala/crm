@@ -37,9 +37,35 @@ Phase 1 core CRM for BIG B Real Estate LLC (Dubai), built with Next.js, TypeScri
    ```
 6. Restart the dev server, go to **Integrations** in the sidebar, and click **Connect Google Calendar**.
 
+- **WhatsApp Business shared inbox** — done. Inbound messages auto-match to an existing Lead/Contact by phone number, or create a new Lead (source = WhatsApp) if none match. Agents reply from the shared inbox at `/whatsapp`; the conversation feeds the same unified activity timeline leads/contacts already have.
+
+### Setting up WhatsApp Business integration
+
+This uses Meta's official WhatsApp Cloud API directly (no third-party BSP needed to get started).
+
+1. Go to [developers.facebook.com](https://developers.facebook.com/) → **My Apps** → **Create App** → type **Business**.
+2. Add the **WhatsApp** product to the app.
+3. Under WhatsApp → **API Setup**, Meta gives you a **free test phone number** immediately — no business verification needed yet. Note the **Phone Number ID**.
+4. Generate an access token:
+   - Quick start: the temporary token shown on the API Setup page (expires in 24h, fine for testing).
+   - For a token that doesn't expire: Meta Business Settings → System Users → create one → generate a token with `whatsapp_business_messaging` permission.
+5. In WhatsApp → **Configuration**, set up the webhook:
+   - Callback URL: `http://localhost:3000/api/integrations/whatsapp/webhook` — **Meta requires a public HTTPS URL**, so for local testing expose your dev server first with a tool like [ngrok](https://ngrok.com/) (`ngrok http 3000`) and use the `https://*.ngrok-free.app` URL it gives you instead.
+   - Verify token: any string you choose — put the same value in `WHATSAPP_VERIFY_TOKEN`.
+   - Subscribe to the `messages` webhook field.
+6. Copy the **App Secret** from App Settings → Basic (used to verify incoming webhook signatures).
+7. Add to `.env`:
+   ```
+   WHATSAPP_PHONE_NUMBER_ID="..."
+   WHATSAPP_ACCESS_TOKEN="..."
+   WHATSAPP_VERIFY_TOKEN="choose-any-string"
+   WHATSAPP_APP_SECRET="..."
+   ```
+8. Restart the dev server. The test number can only message phone numbers you've added as verified test recipients in the Meta dashboard until you complete Business verification for production use.
+
 ## Not included yet (Phase 2+, needs external accounts/approvals)
 
-WhatsApp Business API, cloud telephony, email sync (Gmail/Outlook), Bayut/Dubizzle/Property Finder listing sync, AI assistant, accounting module, mobile app, marketing integrations (Meta/Google Ads). These require real API credentials and should be wired in incrementally — the data model already has the right hooks (e.g. `Lead.source`, `Activity.type`) to plug adapters in without restructuring.
+Cloud telephony, email sync (Gmail/Outlook), Bayut/Dubizzle/Property Finder listing sync, AI assistant, accounting module, mobile app, marketing integrations (Meta/Google Ads). These require real API credentials and should be wired in incrementally — the data model already has the right hooks (e.g. `Lead.source`, `Activity.type`) to plug adapters in without restructuring.
 
 ## Getting started
 

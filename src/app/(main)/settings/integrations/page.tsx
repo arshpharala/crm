@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isGoogleConfigured } from "@/lib/google";
+import { isWhatsAppConfigured, getWebhookUrl } from "@/lib/whatsapp";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { disconnectGoogle } from "./actions";
 
@@ -79,6 +80,32 @@ export default async function IntegrationsPage({
             Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file to enable this.
           </p>
         )}
+      </Card>
+
+      <Card className="mt-4 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-slate-900">WhatsApp Business</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Shared team inbox for WhatsApp leads and client conversations.
+            </p>
+          </div>
+          {isWhatsAppConfigured() ? <Badge color="green">Configured</Badge> : <Badge color="amber">Not configured</Badge>}
+        </div>
+
+        <div className="mt-4 space-y-2 text-xs text-slate-500">
+          <p>Set these in your .env file (see README for the full Meta setup steps):</p>
+          <code className="block rounded bg-slate-50 p-2 text-slate-700">
+            WHATSAPP_PHONE_NUMBER_ID=&quot;...&quot;<br />
+            WHATSAPP_ACCESS_TOKEN=&quot;...&quot;<br />
+            WHATSAPP_VERIFY_TOKEN=&quot;choose-any-string&quot;<br />
+            WHATSAPP_APP_SECRET=&quot;...&quot;
+          </code>
+          <p>
+            Webhook callback URL to register in the Meta App dashboard:{" "}
+            <code className="rounded bg-slate-50 px-1 py-0.5 text-slate-700">{getWebhookUrl()}</code>
+          </p>
+        </div>
       </Card>
     </div>
   );

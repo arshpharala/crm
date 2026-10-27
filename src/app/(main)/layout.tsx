@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/developers", label: "Developers & Projects" },
   { href: "/tasks", label: "Tasks" },
   { href: "/meetings", label: "Meetings" },
+  { href: "/whatsapp", label: "WhatsApp Inbox" },
   { href: "/settings/integrations", label: "Integrations" },
 ];
 

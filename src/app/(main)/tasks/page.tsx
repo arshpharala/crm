@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { Badge, Card, EmptyState, PageHeader, inputClass, SubmitButton } from "@/components/ui";
+import { Badge, Card, EmptyState, PageHeader, PersonChip, SectionTitle, Td, Th, TableShell, inputClass, SubmitButton } from "@/components/ui";
 import { AutoSubmitSelect } from "@/components/auto-submit-select";
+import { CheckSquareIcon } from "@/components/icons";
 import { createTask, updateTaskStatus } from "./actions";
 
 export default async function TasksPage() {
@@ -16,10 +17,10 @@ export default async function TasksPage() {
 
   return (
     <div>
-      <PageHeader title="Tasks & Follow-ups" />
+      <PageHeader title="Tasks & Follow-ups" subtitle={`${tasks.length} total`} />
 
       <Card className="mb-6 p-6">
-        <h2 className="mb-4 text-sm font-semibold text-slate-900">Quick Add Task</h2>
+        <SectionTitle>Quick Add Task</SectionTitle>
         <form action={createTask} className="grid grid-cols-4 gap-3">
           <input name="title" placeholder="Task title" required className={inputClass + " col-span-2"} />
           <input name="dueDate" type="date" className={inputClass} />
@@ -42,61 +43,59 @@ export default async function TasksPage() {
       </Card>
 
       {tasks.length === 0 ? (
-        <EmptyState message="No tasks yet." />
+        <EmptyState message="No tasks yet." icon={<CheckSquareIcon size={28} />} />
       ) : (
-        <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Task</th>
-                <th className="px-4 py-3">Related To</th>
-                <th className="px-4 py-3">Assignee</th>
-                <th className="px-4 py-3">Due</th>
-                <th className="px-4 py-3">Priority</th>
-                <th className="px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {tasks.map((task) => {
-                const overdue = task.dueDate && task.dueDate < now && task.status === "PENDING";
-                return (
-                  <tr key={task.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-slate-900">{task.title}</td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {task.lead?.fullName ?? task.contact?.fullName ?? task.deal?.title ?? "-"}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{task.assignee?.name ?? "-"}</td>
-                    <td className="px-4 py-3">
-                      <span className={overdue ? "font-medium text-red-600" : "text-slate-600"}>
-                        {task.dueDate?.toLocaleDateString() ?? "-"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge color={task.priority === "URGENT" || task.priority === "HIGH" ? "red" : "slate"}>
-                        {task.priority}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <form action={async (formData) => { "use server"; await updateTaskStatus(task.id, formData.get("status") as never); }}>
-                        <AutoSubmitSelect
-                          name="status"
-                          defaultValue={task.status}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs"
-                        >
-                          <option value="PENDING">Pending</option>
-                          <option value="IN_PROGRESS">In Progress</option>
-                          <option value="COMPLETED">Completed</option>
-                          <option value="SNOOZED">Snoozed</option>
-                          <option value="CANCELLED">Cancelled</option>
-                        </AutoSubmitSelect>
-                      </form>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </Card>
+        <TableShell>
+          <thead className="border-b border-slate-100">
+            <tr>
+              <Th>Task</Th>
+              <Th>Related To</Th>
+              <Th>Assignee</Th>
+              <Th>Due</Th>
+              <Th>Priority</Th>
+              <Th>Status</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {tasks.map((task) => {
+              const overdue = task.dueDate && task.dueDate < now && task.status === "PENDING";
+              return (
+                <tr key={task.id} className="hover:bg-slate-50/80">
+                  <Td className="font-medium text-slate-900">{task.title}</Td>
+                  <Td className="text-slate-600">
+                    {task.lead?.fullName ?? task.contact?.fullName ?? task.deal?.title ?? "-"}
+                  </Td>
+                  <Td>{task.assignee ? <PersonChip name={task.assignee.name} /> : <span className="text-slate-400">-</span>}</Td>
+                  <Td>
+                    <span className={overdue ? "font-medium text-rose-600" : "text-slate-600"}>
+                      {task.dueDate?.toLocaleDateString() ?? "-"}
+                    </span>
+                  </Td>
+                  <Td>
+                    <Badge color={task.priority === "URGENT" || task.priority === "HIGH" ? "red" : "slate"} dot>
+                      {task.priority}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <form action={async (formData) => { "use server"; await updateTaskStatus(task.id, formData.get("status") as never); }}>
+                      <AutoSubmitSelect
+                        name="status"
+                        defaultValue={task.status}
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs"
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="SNOOZED">Snoozed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                      </AutoSubmitSelect>
+                    </form>
+                  </Td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </TableShell>
       )}
     </div>
   );

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Card, PageHeader, inputClass, labelClass } from "@/components/ui";
+import { Card, PageHeader, SectionTitle, inputClass, labelClass } from "@/components/ui";
 import { createProject } from "../actions";
 
 export default async function DeveloperDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -29,13 +28,13 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Projects</h2>
+          <SectionTitle>Projects</SectionTitle>
           {developer.projects.length === 0 ? (
             <p className="text-sm text-slate-400">No projects yet.</p>
           ) : (
             <div className="space-y-2">
               {developer.projects.map((project) => (
-                <div key={project.id} className="rounded-md border border-slate-100 px-3 py-2 text-sm">
+                <div key={project.id} className="rounded-lg border border-slate-100 px-3 py-2.5 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-slate-900">{project.name}</span>
                     <span className="text-slate-500">{project.properties.length} unit(s)</span>
@@ -53,7 +52,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
 
       <div>
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Add Project</h2>
+          <SectionTitle>Add Project</SectionTitle>
           <form action={createProject} className="space-y-3">
             <input type="hidden" name="developerId" value={developer.id} />
             <div>
@@ -84,7 +83,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
               <label className={labelClass} htmlFor="paymentPlan">Payment Plan</label>
               <input id="paymentPlan" name="paymentPlan" className={inputClass} placeholder="60/40, 1% monthly..." />
             </div>
-            <button className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+            <button className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
               Add Project
             </button>
           </form>

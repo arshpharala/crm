@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Badge, Card, PageHeader, inputClass } from "@/components/ui";
+import { Badge, Card, PageHeader, SectionTitle, inputClass } from "@/components/ui";
 import { AutoSubmitSelect } from "@/components/auto-submit-select";
 import { addMeetingOutcome, updateMeetingStatus } from "../actions";
 
@@ -18,7 +18,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="grid grid-cols-3 gap-6">
       <div className="col-span-2 space-y-6">
-        <PageHeader title={meeting.title} />
+        <PageHeader title={meeting.title} subtitle={meeting.type.replaceAll("_", " ")} />
 
         <Card className="p-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -41,7 +41,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Outcome</h2>
+          <SectionTitle>Outcome</SectionTitle>
           {meeting.outcome ? (
             <div>
               <p className="text-sm text-slate-700">{meeting.outcome}</p>
@@ -60,7 +60,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
                 <input type="checkbox" name="noShow" />
                 Client did not show up
               </label>
-              <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+              <button className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
                 Save Outcome
               </button>
             </form>
@@ -70,7 +70,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
 
       <div className="space-y-6">
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Status</h2>
+          <SectionTitle>Status</SectionTitle>
           <form action={async (formData) => { "use server"; await updateMeetingStatus(meeting.id, formData.get("status") as never); }}>
             <AutoSubmitSelect name="status" defaultValue={meeting.status} className={inputClass}>
               <option value="SCHEDULED">Scheduled</option>
@@ -83,7 +83,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-2 text-sm font-semibold text-slate-900">Google Calendar</h2>
+          <SectionTitle>Google Calendar</SectionTitle>
           {meeting.googleEventId ? (
             <Badge color="green">Synced</Badge>
           ) : (

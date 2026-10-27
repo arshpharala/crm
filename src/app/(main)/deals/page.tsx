@@ -1,11 +1,7 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
-
-const STAGE_COLORS: Record<string, string> = {
-  CLOSED_WON: "green",
-  CLOSED_LOST: "red",
-};
+import { EmptyState, LinkButton, PageHeader } from "@/components/ui";
+import { PlusIcon } from "@/components/icons";
+import { DealBoard, type BoardDeal } from "./board";
 
 export default async function DealsPage() {
   const deals = await prisma.deal.findMany({
@@ -13,52 +9,37 @@ export default async function DealsPage() {
     include: { contact: true, property: true, agent: true },
   });
 
+  const boardDeals: BoardDeal[] = deals.map((deal) => ({
+    id: deal.id,
+    title: deal.title,
+    stage: deal.stage,
+    value: deal.value,
+    currency: deal.currency,
+    contactName: deal.contact.fullName,
+    propertyTitle: deal.property?.title ?? null,
+    agentName: deal.agent?.name ?? null,
+  }));
+
+  const totalPipelineValue = deals
+    .filter((d) => d.stage !== "CLOSED_WON" && d.stage !== "CLOSED_LOST")
+    .reduce((sum, d) => sum + (d.value ?? 0), 0);
+
   return (
     <div>
       <PageHeader
         title="Deals Pipeline"
+        subtitle={`AED ${totalPipelineValue.toLocaleString()} in active pipeline`}
         action={
-          <Link href="/deals/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-            + New Deal
-          </Link>
+          <LinkButton href="/deals/new">
+            <PlusIcon size={16} /> New Deal
+          </LinkButton>
         }
       />
 
       {deals.length === 0 ? (
-        <EmptyState message="No deals yet." />
+        <EmptyState message="No deals yet. Create your first deal to start the pipeline." />
       ) : (
-        <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Deal</th>
-                <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Property</th>
-                <th className="px-4 py-3">Agent</th>
-                <th className="px-4 py-3">Value</th>
-                <th className="px-4 py-3">Stage</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {deals.map((deal) => (
-                <tr key={deal.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/deals/${deal.id}`} className="font-medium text-slate-900 hover:underline">
-                      {deal.title}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{deal.contact.fullName}</td>
-                  <td className="px-4 py-3 text-slate-600">{deal.property?.title ?? "-"}</td>
-                  <td className="px-4 py-3 text-slate-600">{deal.agent?.name ?? "-"}</td>
-                  <td className="px-4 py-3 text-slate-600">{deal.value ? `${deal.currency} ${deal.value.toLocaleString()}` : "-"}</td>
-                  <td className="px-4 py-3">
-                    <Badge color={STAGE_COLORS[deal.stage] ?? "slate"}>{deal.stage.replaceAll("_", " ")}</Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+        <DealBoard deals={boardDeals} />
       )}
     </div>
   );

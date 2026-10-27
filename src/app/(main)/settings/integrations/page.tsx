@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isGoogleConfigured } from "@/lib/google";
 import { isWhatsAppConfigured, getWebhookUrl } from "@/lib/whatsapp";
 import { Badge, Card, PageHeader } from "@/components/ui";
+import { CalendarIcon, MessageIcon } from "@/components/icons";
 import { disconnectGoogle } from "./actions";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -30,26 +31,31 @@ export default async function IntegrationsPage({
       <PageHeader title="Integrations" />
 
       {connected && (
-        <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Google Calendar connected successfully.
         </div>
       )}
       {error && (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
           {ERROR_MESSAGES[error] ?? "Something went wrong."}
         </div>
       )}
 
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium text-slate-900">Google Calendar</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Sync meetings and property viewings to your Google Calendar.
-            </p>
-            {connection && (
-              <p className="mt-2 text-xs text-slate-400">Connected as {connection.googleEmail}</p>
-            )}
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <CalendarIcon size={18} />
+            </div>
+            <div>
+              <p className="font-medium text-slate-900">Google Calendar</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Sync meetings and property viewings to your Google Calendar.
+              </p>
+              {connection && (
+                <p className="mt-2 text-xs text-slate-400">Connected as {connection.googleEmail}</p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -57,7 +63,7 @@ export default async function IntegrationsPage({
               <div className="flex items-center gap-3">
                 <Badge color="green">Connected</Badge>
                 <form action={disconnectGoogle}>
-                  <button className="text-sm font-medium text-red-600 hover:underline">
+                  <button className="text-sm font-medium text-rose-600 hover:underline">
                     Disconnect
                   </button>
                 </form>
@@ -65,7 +71,7 @@ export default async function IntegrationsPage({
             ) : configured ? (
               <a
                 href="/api/integrations/google/connect"
-                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                className="rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
               >
                 Connect Google Calendar
               </a>
@@ -84,11 +90,16 @@ export default async function IntegrationsPage({
 
       <Card className="mt-4 p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium text-slate-900">WhatsApp Business</p>
-            <p className="mt-1 text-sm text-slate-500">
-              Shared team inbox for WhatsApp leads and client conversations.
-            </p>
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <MessageIcon size={18} />
+            </div>
+            <div>
+              <p className="font-medium text-slate-900">WhatsApp Business</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Shared team inbox for WhatsApp leads and client conversations.
+              </p>
+            </div>
           </div>
           {isWhatsAppConfigured() ? <Badge color="green">Configured</Badge> : <Badge color="amber">Not configured</Badge>}
         </div>

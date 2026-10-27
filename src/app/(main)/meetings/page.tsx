@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
+import { Badge, EmptyState, LinkButton, PageHeader, PersonChip, Td, Th, TableShell } from "@/components/ui";
+import { CalendarIcon, PlusIcon } from "@/components/icons";
 
 const STATUS_COLORS: Record<string, string> = {
   SCHEDULED: "blue",
@@ -20,54 +21,47 @@ export default async function MeetingsPage() {
     <div>
       <PageHeader
         title="Meetings, Viewings & Calendar"
+        subtitle={`${meetings.length} scheduled`}
         action={
-          <Link href="/meetings/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-            + Schedule Meeting
-          </Link>
+          <LinkButton href="/meetings/new">
+            <PlusIcon size={16} /> Schedule Meeting
+          </LinkButton>
         }
       />
 
       {meetings.length === 0 ? (
-        <EmptyState message="No meetings scheduled yet." />
+        <EmptyState message="No meetings scheduled yet." icon={<CalendarIcon size={28} />} />
       ) : (
-        <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Related To</th>
-                <th className="px-4 py-3">Organizer</th>
-                <th className="px-4 py-3">When</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Calendar</th>
+        <TableShell>
+          <thead className="border-b border-slate-100">
+            <tr>
+              <Th>Title</Th>
+              <Th>Related To</Th>
+              <Th>Organizer</Th>
+              <Th>When</Th>
+              <Th>Status</Th>
+              <Th>Calendar</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {meetings.map((meeting) => (
+              <tr key={meeting.id} className="hover:bg-slate-50/80">
+                <Td>
+                  <Link href={`/meetings/${meeting.id}`} className="font-medium text-slate-900 hover:text-indigo-600">
+                    {meeting.title}
+                  </Link>
+                </Td>
+                <Td className="text-slate-600">
+                  {meeting.lead?.fullName ?? meeting.contact?.fullName ?? meeting.deal?.title ?? "-"}
+                </Td>
+                <Td><PersonChip name={meeting.organizer.name} /></Td>
+                <Td className="text-slate-600">{meeting.startTime.toLocaleString()}</Td>
+                <Td><Badge color={STATUS_COLORS[meeting.status]} dot>{meeting.status.replaceAll("_", " ")}</Badge></Td>
+                <Td>{meeting.googleEventId ? <Badge color="green">Synced</Badge> : <Badge>Not synced</Badge>}</Td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {meetings.map((meeting) => (
-                <tr key={meeting.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/meetings/${meeting.id}`} className="font-medium text-slate-900 hover:underline">
-                      {meeting.title}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {meeting.lead?.fullName ?? meeting.contact?.fullName ?? meeting.deal?.title ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{meeting.organizer.name}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {meeting.startTime.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge color={STATUS_COLORS[meeting.status]}>{meeting.status.replaceAll("_", " ")}</Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    {meeting.googleEventId ? <Badge color="green">Synced</Badge> : <Badge>Not synced</Badge>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+            ))}
+          </tbody>
+        </TableShell>
       )}
     </div>
   );

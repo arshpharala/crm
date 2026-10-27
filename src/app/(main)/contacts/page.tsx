@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Card, EmptyState, PageHeader } from "@/components/ui";
+import { EmptyState, LinkButton, PageHeader, PersonChip, Td, Th, TableShell } from "@/components/ui";
+import { PlusIcon, UserIcon } from "@/components/icons";
 
 export default async function ContactsPage() {
   const contacts = await prisma.contact.findMany({
@@ -12,46 +13,45 @@ export default async function ContactsPage() {
     <div>
       <PageHeader
         title="Contacts & Investors"
+        subtitle={`${contacts.length} total`}
         action={
-          <Link href="/contacts/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-            + New Contact
-          </Link>
+          <LinkButton href="/contacts/new">
+            <PlusIcon size={16} /> New Contact
+          </LinkButton>
         }
       />
 
       {contacts.length === 0 ? (
-        <EmptyState message="No contacts yet." />
+        <EmptyState message="No contacts yet." icon={<UserIcon size={28} />} />
       ) : (
-        <Card className="overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Phone</th>
-                <th className="px-4 py-3">Country</th>
-                <th className="px-4 py-3">Currency</th>
-                <th className="px-4 py-3">Open Deals</th>
-                <th className="px-4 py-3">Lifetime Value</th>
+        <TableShell>
+          <thead className="border-b border-slate-100">
+            <tr>
+              <Th>Name</Th>
+              <Th>Phone</Th>
+              <Th>Country</Th>
+              <Th>Currency</Th>
+              <Th>Open Deals</Th>
+              <Th>Lifetime Value</Th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {contacts.map((contact) => (
+              <tr key={contact.id} className="hover:bg-slate-50/80">
+                <Td>
+                  <Link href={`/contacts/${contact.id}`}>
+                    <PersonChip name={contact.fullName} />
+                  </Link>
+                </Td>
+                <Td className="text-slate-600">{contact.phone}</Td>
+                <Td className="text-slate-600">{contact.country ?? "-"}</Td>
+                <Td className="text-slate-600">{contact.currency}</Td>
+                <Td className="text-slate-600">{contact.deals.length}</Td>
+                <Td className="font-medium text-slate-900">{contact.currency} {contact.lifetimeValue.toLocaleString()}</Td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {contacts.map((contact) => (
-                <tr key={contact.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/contacts/${contact.id}`} className="font-medium text-slate-900 hover:underline">
-                      {contact.fullName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">{contact.phone}</td>
-                  <td className="px-4 py-3 text-slate-600">{contact.country ?? "-"}</td>
-                  <td className="px-4 py-3 text-slate-600">{contact.currency}</td>
-                  <td className="px-4 py-3 text-slate-600">{contact.deals.length}</td>
-                  <td className="px-4 py-3 text-slate-600">{contact.currency} {contact.lifetimeValue}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
+            ))}
+          </tbody>
+        </TableShell>
       )}
     </div>
   );

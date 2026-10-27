@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Badge, Card, PageHeader, inputClass } from "@/components/ui";
+import { Badge, Card, PageHeader, SectionTitle, inputClass } from "@/components/ui";
 import { AutoSubmitSelect } from "@/components/auto-submit-select";
 import { assignConversation, sendReply, tagConversation, updateConversationStatus } from "../actions";
 
@@ -38,12 +38,12 @@ export default async function ConversationDetailPage({ params }: { params: Promi
                 key={message.id}
                 className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
                   message.direction === "OUTBOUND"
-                    ? "ml-auto bg-slate-900 text-white"
+                    ? "ml-auto bg-indigo-600 text-white"
                     : "bg-slate-100 text-slate-800"
                 }`}
               >
                 <p>{message.content}</p>
-                <p className={`mt-1 text-[10px] ${message.direction === "OUTBOUND" ? "text-slate-300" : "text-slate-400"}`}>
+                <p className={`mt-1 text-[10px] ${message.direction === "OUTBOUND" ? "text-indigo-200" : "text-slate-400"}`}>
                   {message.direction === "OUTBOUND" ? message.author?.name ?? "Agent" : "Client"} ·{" "}
                   {message.createdAt.toLocaleString()} · {message.status}
                 </p>
@@ -54,7 +54,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
           <form action={sendReply} className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
             <input type="hidden" name="conversationId" value={conversation.id} />
             <input name="content" placeholder="Type a reply..." className={inputClass} required />
-            <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+            <button className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
               Send
             </button>
           </form>
@@ -63,7 +63,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
 
       <div className="space-y-6">
         <Card className="p-6">
-          <h2 className="mb-2 text-sm font-semibold text-slate-900">Linked Record</h2>
+          <SectionTitle>Linked Record</SectionTitle>
           {conversation.lead && (
             <Link href={`/leads/${conversation.lead.id}`} className="text-sm text-slate-700 hover:underline">
               Lead: {conversation.lead.fullName}
@@ -80,7 +80,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-2 text-sm font-semibold text-slate-900">Status</h2>
+          <SectionTitle>Status</SectionTitle>
           <form action={async (formData) => { "use server"; await updateConversationStatus(conversation.id, formData.get("status") as never); }}>
             <AutoSubmitSelect name="status" defaultValue={conversation.status} className={inputClass}>
               <option value="OPEN">Open</option>
@@ -91,7 +91,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-2 text-sm font-semibold text-slate-900">Assigned Agent</h2>
+          <SectionTitle>Assigned Agent</SectionTitle>
           <form action={assignConversation}>
             <input type="hidden" name="conversationId" value={conversation.id} />
             <AutoSubmitSelect name="agentId" defaultValue={conversation.assignedAgentId ?? ""} className={inputClass}>
@@ -104,7 +104,7 @@ export default async function ConversationDetailPage({ params }: { params: Promi
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-2 text-sm font-semibold text-slate-900">Tags</h2>
+          <SectionTitle>Tags</SectionTitle>
           <form action={tagConversation} className="flex gap-2">
             <input type="hidden" name="conversationId" value={conversation.id} />
             <input

@@ -18,6 +18,7 @@ Phase 1 core CRM for BIG B Real Estate LLC (Dubai), built with Next.js, TypeScri
 - Deals pipeline: off-plan/secondary/leasing transaction stages, commission fields
 - Tasks & follow-ups: priorities, due dates, overdue tracking
 - Executive dashboard: key CRM metrics
+- User management: create/edit users, assign role & team, activate/deactivate, reset password. Visible only to roles with user-management permission (Super Admin, Managing Director, Sales Director, CRM Admin, HR/Operations) — enforced both in the nav and on the page itself.
 
 ## Phase 2 progress
 
@@ -83,6 +84,8 @@ Visit `http://localhost:3000` and sign in with:
 - `agent1@bigbproperties.ae` / `admin123`
 - `agent2@bigbproperties.ae` / `admin123`
 - `finance@bigbproperties.ae` / `admin123`
+
+Once signed in as Super Admin, go to **Users** in the sidebar to create real accounts for your team — no need to edit the seed script for new users.
 
 ## Environment variables
 

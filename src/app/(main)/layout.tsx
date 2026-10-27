@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { auth, signOut } from "@/auth";
 import { NavLink } from "@/components/nav-link";
 import { Avatar } from "@/components/ui";
+import { canManageUsers } from "@/lib/permissions";
 import {
   GridIcon,
   TargetIcon,
@@ -16,38 +17,43 @@ import {
   LogOutIcon,
 } from "@/components/icons";
 
-const NAV_GROUPS = [
-  {
-    label: "Workspace",
-    items: [{ href: "/dashboard", label: "Dashboard", icon: <GridIcon size={17} /> }],
-  },
-  {
-    label: "CRM",
-    items: [
-      { href: "/leads", label: "Leads", icon: <TargetIcon size={17} /> },
-      { href: "/contacts", label: "Contacts", icon: <UserIcon size={17} /> },
-      { href: "/deals", label: "Deals", icon: <BriefcaseIcon size={17} /> },
-      { href: "/properties", label: "Properties", icon: <BuildingIcon size={17} /> },
-      { href: "/developers", label: "Developers & Projects", icon: <Building2Icon size={17} /> },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { href: "/tasks", label: "Tasks", icon: <CheckSquareIcon size={17} /> },
-      { href: "/meetings", label: "Meetings", icon: <CalendarIcon size={17} /> },
-      { href: "/whatsapp", label: "WhatsApp Inbox", icon: <MessageIcon size={17} /> },
-    ],
-  },
-  {
-    label: "Settings",
-    items: [{ href: "/settings/integrations", label: "Integrations", icon: <PlugIcon size={17} /> }],
-  },
-];
-
 export default async function MainLayout({ children }: { children: ReactNode }) {
   const session = await auth();
   const name = session?.user?.name ?? "";
+
+  const NAV_GROUPS = [
+    {
+      label: "Workspace",
+      items: [{ href: "/dashboard", label: "Dashboard", icon: <GridIcon size={17} /> }],
+    },
+    {
+      label: "CRM",
+      items: [
+        { href: "/leads", label: "Leads", icon: <TargetIcon size={17} /> },
+        { href: "/contacts", label: "Contacts", icon: <UserIcon size={17} /> },
+        { href: "/deals", label: "Deals", icon: <BriefcaseIcon size={17} /> },
+        { href: "/properties", label: "Properties", icon: <BuildingIcon size={17} /> },
+        { href: "/developers", label: "Developers & Projects", icon: <Building2Icon size={17} /> },
+      ],
+    },
+    {
+      label: "Operations",
+      items: [
+        { href: "/tasks", label: "Tasks", icon: <CheckSquareIcon size={17} /> },
+        { href: "/meetings", label: "Meetings", icon: <CalendarIcon size={17} /> },
+        { href: "/whatsapp", label: "WhatsApp Inbox", icon: <MessageIcon size={17} /> },
+      ],
+    },
+    {
+      label: "Settings",
+      items: [
+        { href: "/settings/integrations", label: "Integrations", icon: <PlugIcon size={17} /> },
+        ...(session?.user && canManageUsers(session.user.role)
+          ? [{ href: "/users", label: "Users", icon: <UserIcon size={17} /> }]
+          : []),
+      ],
+    },
+  ];
 
   return (
     <div className="flex min-h-screen bg-slate-50">

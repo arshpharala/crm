@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Badge, Card, PageHeader, inputClass, labelClass } from "@/components/ui";
 import { AutoSubmitSelect } from "@/components/auto-submit-select";
@@ -36,15 +37,20 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         <PageHeader
           title={lead.fullName}
           action={
-            !lead.convertedContactId ? (
-              <form action={async () => { "use server"; await convertLeadToContact(lead.id); }}>
-                <button className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
-                  Convert to Contact
-                </button>
-              </form>
-            ) : (
-              <Badge color="green">Converted to Contact</Badge>
-            )
+            <div className="flex items-center gap-3">
+              <Link href={`/meetings/new?leadId=${lead.id}`} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Schedule Meeting
+              </Link>
+              {!lead.convertedContactId ? (
+                <form action={async () => { "use server"; await convertLeadToContact(lead.id); }}>
+                  <button className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                    Convert to Contact
+                  </button>
+                </form>
+              ) : (
+                <Badge color="green">Converted to Contact</Badge>
+              )}
+            </div>
           }
         />
 

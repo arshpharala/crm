@@ -159,6 +159,22 @@ enum ActivityType {
   FOLLOW_UP
 }
 
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum MeetingType {
+  OFFICE_MEETING
+  DEVELOPER_MEETING
+  PROPERTY_VIEWING
+  CLIENT_VISIT
+  VIRTUAL
+}
+
 // ---------- Core models ----------
 
 model User {
@@ -180,6 +196,23 @@ model User {
   tasks               Task[]        @relation("TaskAssignee")
   activities          Activity[]    @relation("ActivityAuthor")
   leadsAssignedByMe   Lead[]        @relation("AssignedBy")
+  organizedMeetings   Meeting[]     @relation("MeetingOrganizer")
+  googleConnection    GoogleConnection?
+}
+
+model GoogleConnection {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+
+  googleEmail  String
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  scope        String
 }
 
 model Team {
@@ -236,6 +269,7 @@ model Lead {
 
   tasks      Task[]
   activities Activity[]
+  meetings   Meeting[]
 }
 
 model Contact {
@@ -263,6 +297,7 @@ model Contact {
   deals  Deal[]
   tasks  Task[]
   activities Activity[]
+  meetings   Meeting[]
 }
 
 model Company {
@@ -380,6 +415,7 @@ model Deal {
 
   tasks      Task[]
   activities Activity[]
+  meetings   Meeting[]
 }
 
 model Task {
@@ -404,6 +440,37 @@ model Task {
   contact   Contact? @relation(fields: [contactId], references: [id])
   dealId    String?
   deal      Deal?    @relation(fields: [dealId], references: [id])
+}
+
+model Meeting {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title       String
+  description String?
+  type        MeetingType   @default(OFFICE_MEETING)
+  status      MeetingStatus @default(SCHEDULED)
+
+  startTime DateTime
+  endTime   DateTime
+  location  String?
+  meetingLink String?
+  attendees String?
+
+  organizerId String
+  organizer   User   @relation("MeetingOrganizer", fields: [organizerId], references: [id])
+
+  leadId    String?
+  lead      Lead?    @relation(fields: [leadId], references: [id])
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+  dealId    String?
+  deal      Deal?    @relation(fields: [dealId], references: [id])
+
+  googleEventId String? @unique
+  outcome       String?
+  noShow        Boolean @default(false)
 }
 
 model Activity {

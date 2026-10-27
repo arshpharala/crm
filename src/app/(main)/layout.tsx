@@ -10,6 +10,8 @@ const NAV_ITEMS = [
   { href: "/properties", label: "Properties" },
   { href: "/developers", label: "Developers & Projects" },
   { href: "/tasks", label: "Tasks" },
+  { href: "/meetings", label: "Meetings" },
+  { href: "/settings/integrations", label: "Integrations" },
 ];
 
 export default async function MainLayout({ children }: { children: ReactNode }) {

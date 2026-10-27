@@ -23,7 +23,14 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="grid grid-cols-3 gap-6">
       <div className="col-span-2 space-y-6">
-        <PageHeader title={contact.fullName} />
+        <PageHeader
+          title={contact.fullName}
+          action={
+            <Link href={`/meetings/new?contactId=${contact.id}`} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              Schedule Meeting
+            </Link>
+          }
+        />
 
         <Card className="p-6">
           <div className="grid grid-cols-2 gap-4 text-sm">

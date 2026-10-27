@@ -19,9 +19,27 @@ Phase 1 core CRM for BIG B Real Estate LLC (Dubai), built with Next.js, TypeScri
 - Tasks & follow-ups: priorities, due dates, overdue tracking
 - Executive dashboard: key CRM metrics
 
+## Phase 2 progress
+
+- **Google Calendar sync** — done. Agents connect their Google account from Settings → Integrations; scheduling a meeting (Module 13) creates it on the agent's real Google Calendar and keeps it in sync on reschedule/cancel.
+
+### Setting up Google Calendar integration
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) and create a project (or use an existing one).
+2. Enable the **Google Calendar API** (APIs & Services → Library).
+3. Configure the **OAuth consent screen** (APIs & Services → OAuth consent screen). For internal testing, "External" + add your own email as a test user is fine.
+4. Create credentials: APIs & Services → Credentials → Create Credentials → OAuth client ID → Application type **Web application**.
+   - Authorized redirect URI: `http://localhost:3000/api/integrations/google/callback` (add your production URL's equivalent later).
+5. Copy the **Client ID** and **Client Secret** into `.env`:
+   ```
+   GOOGLE_CLIENT_ID="your-client-id"
+   GOOGLE_CLIENT_SECRET="your-client-secret"
+   ```
+6. Restart the dev server, go to **Integrations** in the sidebar, and click **Connect Google Calendar**.
+
 ## Not included yet (Phase 2+, needs external accounts/approvals)
 
-WhatsApp Business API, cloud telephony, email sync (Google Workspace/Microsoft 365), Bayut/Dubizzle/Property Finder listing sync, AI assistant, accounting module, mobile app, marketing integrations (Meta/Google Ads). These require real API credentials and should be wired in incrementally — the data model already has the right hooks (e.g. `Lead.source`, `Activity.type`) to plug adapters in without restructuring.
+WhatsApp Business API, cloud telephony, email sync (Gmail/Outlook), Bayut/Dubizzle/Property Finder listing sync, AI assistant, accounting module, mobile app, marketing integrations (Meta/Google Ads). These require real API credentials and should be wired in incrementally — the data model already has the right hooks (e.g. `Lead.source`, `Activity.type`) to plug adapters in without restructuring.
 
 ## Getting started
 

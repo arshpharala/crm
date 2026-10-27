@@ -1,0 +1,425 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  SUPER_ADMIN
+  MANAGING_DIRECTOR
+  SALES_DIRECTOR
+  SALES_MANAGER
+  TEAM_LEADER
+  AGENT
+  CRM_ADMIN
+  LISTING_ADMIN
+  MARKETING_MANAGER
+  TELECALLER
+  FINANCE
+  HR_OPERATIONS
+  REFERRAL_PARTNER
+  DEVELOPER_RELATIONSHIP_MANAGER
+  AUDITOR
+}
+
+enum LeadSource {
+  WEBSITE
+  LANDING_PAGE
+  GOOGLE_ADS
+  META_ADS
+  WHATSAPP
+  EMAIL
+  BAYUT
+  DUBIZZLE
+  PROPERTY_FINDER
+  GOOGLE_BUSINESS
+  LINKEDIN
+  QR_CODE
+  REFERRAL
+  WALK_IN
+  PHONE_CALL
+  EXHIBITION
+  DEVELOPER_EVENT
+  MANUAL
+  CSV_IMPORT
+  THIRD_PARTY
+  API_WEBHOOK
+  OTHER
+}
+
+enum LeadStage {
+  NEW
+  UNASSIGNED
+  ASSIGNED
+  FIRST_CONTACT_PENDING
+  CONTACT_ATTEMPTED
+  CONTACTED
+  QUALIFIED
+  REQUIREMENTS_COLLECTED
+  PROPERTIES_SHORTLISTED
+  PROPOSAL_SENT
+  FOLLOW_UP_PENDING
+  VIEWING_SCHEDULED
+  VIEWING_COMPLETED
+  NEGOTIATION
+  BOOKING_IN_PROGRESS
+  BOOKING_COMPLETED
+  SPA_CONTRACT_PROCESSING
+  TRANSACTION_COMPLETED
+  AFTER_SALES
+  NURTURING
+  LOST
+  DUPLICATE
+  INVALID
+}
+
+enum LeadTemperature {
+  HOT
+  WARM
+  COLD
+}
+
+enum InvestmentPurpose {
+  SELF_USE
+  RENTAL_INCOME
+  CAPITAL_APPRECIATION
+  RELOCATION
+  RESALE
+}
+
+enum PropertyCategory {
+  OFF_PLAN
+  SECONDARY_SALE
+  LEASING_RESIDENTIAL
+  LEASING_COMMERCIAL
+}
+
+enum PropertyAvailability {
+  AVAILABLE
+  RESERVED
+  SOLD
+  RENTED
+  OFF_MARKET
+}
+
+enum DealType {
+  OFF_PLAN
+  SECONDARY
+  LEASING
+}
+
+enum DealStage {
+  QUALIFICATION
+  PROPERTY_SELECTION
+  VIEWING
+  NEGOTIATION
+  BOOKING
+  SPA_PROCESSING
+  TRANSFER_DLD
+  COMMISSION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SNOOZED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityType {
+  CALL
+  WHATSAPP
+  EMAIL
+  SMS
+  MEETING
+  NOTE
+  PROPERTY_SUGGESTION
+  BROCHURE_SENT
+  QUOTATION
+  VIEWING
+  OFFER
+  CONTRACT
+  PAYMENT
+  ASSIGNMENT
+  FOLLOW_UP
+}
+
+// ---------- Core models ----------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role     @default(AGENT)
+  active    Boolean  @default(true)
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedLeads       Lead[]        @relation("AssignedAgent")
+  assignedDeals       Deal[]        @relation("DealAgent")
+  listedProperties    Property[]    @relation("ListingAgent")
+  tasks               Task[]        @relation("TaskAssignee")
+  activities          Activity[]    @relation("ActivityAuthor")
+  leadsAssignedByMe   Lead[]        @relation("AssignedBy")
+}
+
+model Team {
+  id      String @id @default(cuid())
+  name    String
+  members User[]
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fullName        String
+  email           String?
+  phone           String
+  countryCode     String?
+  country         String?
+  nationality     String?
+  preferredLanguage String?
+
+  source      LeadSource @default(MANUAL)
+  campaign    String?
+  adId        String?
+  formId      String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  propertyInterest String?
+  budgetMin        Float?
+  budgetMax        Float?
+  currency         String  @default("AED")
+  purpose          InvestmentPurpose?
+  timeline         String?
+  mortgageOrCash   String?
+
+  stage       LeadStage       @default(NEW)
+  temperature LeadTemperature @default(WARM)
+  score       Int             @default(0)
+  lostReason  String?
+  nextActionDate DateTime?
+
+  firstResponseAt DateTime?
+  consent         Boolean   @default(false)
+
+  assignedAgentId String?
+  assignedAgent   User?   @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  assignedById    String?
+  assignedBy      User?   @relation("AssignedBy", fields: [assignedById], references: [id])
+
+  convertedContactId String?  @unique
+  convertedContact   Contact? @relation(fields: [convertedContactId], references: [id])
+
+  tasks      Task[]
+  activities Activity[]
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fullName          String
+  email             String?
+  phone             String
+  country           String?
+  timezone          String?
+  preferredLanguage String?
+  currency          String  @default("AED")
+
+  budgetMin Float?
+  budgetMax Float?
+  propertyPreferences String?
+  mortgageStatus      String?
+  referralSource      String?
+  lifetimeValue       Float   @default(0)
+  notes               String?
+
+  lead   Lead?
+  deals  Deal[]
+  tasks  Task[]
+  activities Activity[]
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name               String
+  logoUrl            String?
+  website            String?
+  contactDetails     String?
+  relationshipManagerId String?
+  registrationStatus String?
+  commissionTerms    String?
+  rating             Int?
+  notes              String?
+
+  projects  Project[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name             String
+  developerId      String
+  developer        Company  @relation(fields: [developerId], references: [id])
+  masterCommunity  String?
+  location         String?
+  status           String?
+  launchDate       DateTime?
+  expectedCompletion DateTime?
+  unitTypes        String?
+  startingPrice    Float?
+  paymentPlan      String?
+  amenities        String?
+  commissionRate   Float?
+
+  properties Property[]
+}
+
+model Property {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reference   String   @unique
+  title       String
+  category    PropertyCategory
+  emirate     String?
+  area        String?
+  community   String?
+  building    String?
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+  unitNumber  String?
+
+  bedrooms    Int?
+  bathrooms   Int?
+  maidRoom    Boolean @default(false)
+  balcony     Boolean @default(false)
+  parking     Int?
+  floor       String?
+  view        String?
+
+  builtUpArea   Float?
+  saleableArea  Float?
+  plotArea      Float?
+
+  price          Float
+  pricePerSqft   Float?
+  furnishing     String?
+  completionStatus String?
+  handoverEstimate DateTime?
+  paymentPlan    String?
+  serviceCharges Float?
+
+  ownershipStatus String?
+  availability    PropertyAvailability @default(AVAILABLE)
+
+  listingAgentId String?
+  listingAgent   User? @relation("ListingAgent", fields: [listingAgentId], references: [id])
+
+  images             String?
+  publicationStatus  String  @default("DRAFT")
+  lastVerifiedAt      DateTime?
+  internalNotes       String?
+
+  deals Deal[]
+}
+
+model Deal {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title      String
+  type       DealType
+  stage      DealStage @default(QUALIFICATION)
+  value      Float?
+  currency   String    @default("AED")
+
+  contactId  String
+  contact    Contact  @relation(fields: [contactId], references: [id])
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+  agentId    String?
+  agent      User?    @relation("DealAgent", fields: [agentId], references: [id])
+
+  commissionRate   Float?
+  commissionAmount Float?
+  closedAt         DateTime?
+  lostReason       String?
+
+  tasks      Task[]
+  activities Activity[]
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title       String
+  description String?
+  dueDate     DateTime?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(PENDING)
+  recurring   Boolean      @default(false)
+  snoozedReason String?
+
+  assigneeId String?
+  assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  leadId    String?
+  lead      Lead?    @relation(fields: [leadId], references: [id])
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+  dealId    String?
+  deal      Deal?    @relation(fields: [dealId], references: [id])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  type    ActivityType
+  content String?
+
+  authorId String?
+  author   User?   @relation("ActivityAuthor", fields: [authorId], references: [id])
+
+  leadId    String?
+  lead      Lead?    @relation(fields: [leadId], references: [id])
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+  dealId    String?
+  deal      Deal?    @relation(fields: [dealId], references: [id])
+}

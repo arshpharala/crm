@@ -64,9 +64,20 @@ This uses Meta's official WhatsApp Cloud API directly (no third-party BSP needed
    ```
 8. Restart the dev server. The test number can only message phone numbers you've added as verified test recipients in the Meta dashboard until you complete Business verification for production use.
 
+- **AI lead ↔ property matching (Claude)** — done. On a lead's page, agents can click **Find Matching Properties** and Claude ranks the best-fit available properties against the lead's budget, purpose and stated interest. More AI features (chat assistant, lead enrichment, project crawling) are planned next.
+
+### Setting up Claude AI integration
+
+1. Get an API key from [console.anthropic.com](https://console.anthropic.com/).
+2. Add it to `.env`:
+   ```
+   ANTHROPIC_API_KEY="your-api-key"
+   ```
+3. Restart the dev server. Check **Integrations** in the sidebar — Claude AI should show as Configured.
+
 ## Not included yet (Phase 2+, needs external accounts/approvals)
 
-Cloud telephony, email sync (Gmail/Outlook), Bayut/Dubizzle/Property Finder listing sync, AI assistant, accounting module, mobile app, marketing integrations (Meta/Google Ads). These require real API credentials and should be wired in incrementally — the data model already has the right hooks (e.g. `Lead.source`, `Activity.type`) to plug adapters in without restructuring.
+Cloud telephony, email sync (Gmail/Outlook), Bayut/Dubizzle/Property Finder listing sync, AI chat assistant, AI-driven lead enrichment and developer-site crawling, accounting module, mobile app, marketing integrations (Meta/Google Ads). These require real API credentials and should be wired in incrementally — the data model already has the right hooks (e.g. `Lead.source`, `Activity.type`) to plug adapters in without restructuring.
 
 ## Getting started
 

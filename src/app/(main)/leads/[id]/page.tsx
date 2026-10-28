@@ -7,7 +7,9 @@ import { CalendarIcon } from "@/components/icons";
 import { addLeadActivity, assignLead, convertLeadToContact, updateLeadStage } from "../actions";
 import { createTaskForEntity } from "../../tasks/actions";
 import { canEditLead, canEditAnyLead, assignableAgentsWhere } from "@/lib/permissions";
+import { isAIConfigured } from "@/lib/ai";
 import { EditLeadDetails } from "./edit-lead-details";
+import { AIMatchPanel } from "./ai-match-panel";
 
 const STAGES = [
   "NEW", "UNASSIGNED", "ASSIGNED", "FIRST_CONTACT_PENDING", "CONTACT_ATTEMPTED", "CONTACTED",
@@ -224,6 +226,17 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <Badge color={lead.temperature === "HOT" ? "red" : lead.temperature === "WARM" ? "amber" : "blue"} dot>
             {lead.temperature}
           </Badge>
+        </Card>
+
+        <Card className="p-6">
+          <SectionTitle>AI Property Matches</SectionTitle>
+          {isAIConfigured() ? (
+            <AIMatchPanel leadId={lead.id} />
+          ) : (
+            <p className="text-xs text-slate-400">
+              AI matching isn&apos;t configured yet. Add <code className="rounded bg-slate-50 px-1 py-0.5">ANTHROPIC_API_KEY</code> to your .env file.
+            </p>
+          )}
         </Card>
 
         <Card className="p-6">

@@ -2,9 +2,10 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isGoogleConfigured } from "@/lib/google";
 import { isWhatsAppConfigured, getWebhookUrl } from "@/lib/whatsapp";
+import { isAIConfigured } from "@/lib/ai";
 import { canManageUsers } from "@/lib/permissions";
 import { Badge, Card, PageHeader } from "@/components/ui";
-import { CalendarIcon, MessageIcon } from "@/components/icons";
+import { CalendarIcon, MessageIcon, SparkleIcon } from "@/components/icons";
 import { disconnectGoogle } from "./actions";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -133,6 +134,33 @@ export default async function IntegrationsPage({
             <code className="rounded bg-slate-50 px-1 py-0.5 text-slate-700">{getWebhookUrl()}</code>
           </p>
         </div>
+      </Card>
+
+      <Card className="mt-4 p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <SparkleIcon size={18} />
+            </div>
+            <div>
+              <p className="font-medium text-slate-900">Claude AI (Anthropic)</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Powers AI lead ↔ property matching, with more AI features planned.
+              </p>
+            </div>
+          </div>
+          {isAIConfigured() ? <Badge color="green">Configured</Badge> : <Badge color="amber">Not configured</Badge>}
+        </div>
+
+        {!isAIConfigured() && (
+          <p className="mt-4 text-xs text-slate-400">
+            Get a key at{" "}
+            <a href="https://console.anthropic.com/" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">
+              console.anthropic.com
+            </a>{" "}
+            and set <code className="rounded bg-slate-50 px-1 py-0.5 text-slate-700">ANTHROPIC_API_KEY</code> in your .env file.
+          </p>
+        )}
       </Card>
     </div>
   );

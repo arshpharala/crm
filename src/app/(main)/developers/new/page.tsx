@@ -12,6 +12,10 @@ export default function NewDeveloperPage() {
             <input id="name" name="name" required className={inputClass} />
           </div>
           <div>
+            <label className={labelClass} htmlFor="city">City</label>
+            <input id="city" name="city" className={inputClass} placeholder="Dubai, Abu Dhabi, Sharjah..." />
+          </div>
+          <div>
             <label className={labelClass} htmlFor="website">Website</label>
             <input id="website" name="website" className={inputClass} />
           </div>
@@ -30,6 +34,10 @@ export default function NewDeveloperPage() {
           <div className="col-span-2">
             <label className={labelClass} htmlFor="notes">Notes</label>
             <textarea id="notes" name="notes" className={inputClass} rows={3} />
+          </div>
+          <div className="col-span-2">
+            <label className={labelClass} htmlFor="portalLogins">Portal Logins</label>
+            <textarea id="portalLogins" name="portalLogins" className={inputClass} rows={3} placeholder="Portal URL, username, password..." />
           </div>
           <div className="col-span-2 mt-2">
             <SubmitButton>Create Developer</SubmitButton>

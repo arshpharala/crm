@@ -32,7 +32,9 @@ export default async function DevelopersPage() {
                   <Building2Icon size={18} />
                 </div>
                 <p className="font-medium text-slate-900">{dev.name}</p>
-                <p className="mt-1 text-sm text-slate-500">{dev.projects.length} project(s)</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {dev.city ? `${dev.city} · ` : ""}{dev.projects.length} project(s)
+                </p>
                 {dev.registrationStatus && <p className="mt-1 text-xs text-slate-400">{dev.registrationStatus}</p>}
               </Card>
             </Link>

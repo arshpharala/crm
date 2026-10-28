@@ -13,11 +13,13 @@ export async function createDeveloper(formData: FormData) {
   const developer = await prisma.company.create({
     data: {
       name,
+      city: String(formData.get("city") ?? "") || null,
       website: String(formData.get("website") ?? "") || null,
       contactDetails: String(formData.get("contactDetails") ?? "") || null,
       registrationStatus: String(formData.get("registrationStatus") ?? "") || null,
       commissionTerms: String(formData.get("commissionTerms") ?? "") || null,
       notes: String(formData.get("notes") ?? "") || null,
+      portalLogins: String(formData.get("portalLogins") ?? "") || null,
       createdById: session?.user?.id ?? null,
     },
   });

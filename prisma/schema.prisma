@@ -345,6 +345,7 @@ model Company {
   updatedAt DateTime @updatedAt
 
   name               String
+  city               String?
   logoUrl            String?
   website            String?
   contactDetails     String?
@@ -353,6 +354,7 @@ model Company {
   commissionTerms    String?
   rating             Int?
   notes              String?
+  portalLogins       String?
 
   createdById String?
   createdBy   User?   @relation("CompanyCreator", fields: [createdById], references: [id])

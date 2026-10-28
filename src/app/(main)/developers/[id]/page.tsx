@@ -20,12 +20,28 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
 
         <Card className="p-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
+            <div><span className="text-slate-500">City:</span> <span className="font-medium">{developer.city ?? "-"}</span></div>
             <div><span className="text-slate-500">Website:</span> <span className="font-medium">{developer.website ?? "-"}</span></div>
-            <div><span className="text-slate-500">Contact:</span> <span className="font-medium">{developer.contactDetails ?? "-"}</span></div>
+            <div className="col-span-2"><span className="text-slate-500">Contact:</span> <span className="whitespace-pre-wrap font-medium">{developer.contactDetails ?? "-"}</span></div>
             <div><span className="text-slate-500">Registration:</span> <span className="font-medium">{developer.registrationStatus ?? "-"}</span></div>
             <div><span className="text-slate-500">Commission:</span> <span className="font-medium">{developer.commissionTerms ?? "-"}</span></div>
+            {developer.notes && (
+              <div className="col-span-2"><span className="text-slate-500">Notes:</span> <span className="font-medium">{developer.notes}</span></div>
+            )}
           </div>
         </Card>
+
+        {developer.portalLogins && (
+          <Card className="p-6">
+            <div className="mb-2 flex items-center gap-2">
+              <SectionTitle>Portal Access</SectionTitle>
+              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/15">
+                Sensitive — contains login credentials
+              </span>
+            </div>
+            <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-xs text-slate-700">{developer.portalLogins}</pre>
+          </Card>
+        )}
 
         <Card className="p-6">
           <SectionTitle>Projects</SectionTitle>

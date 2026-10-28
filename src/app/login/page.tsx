@@ -68,10 +68,6 @@ export default function LoginPage() {
               {pending ? "Signing in..." : "Sign in"}
             </button>
           </form>
-
-          <div className="mt-6 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-500">
-            Demo: <span className="font-medium text-slate-700">admin@bigbproperties.ae</span> / admin123
-          </div>
         </div>
       </div>
     </div>

@@ -46,14 +46,15 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
     },
     {
       label: "Settings",
-      items: [
-        { href: "/settings/integrations", label: "Integrations", icon: <PlugIcon size={17} /> },
-        ...(session?.user && canManageUsers(session.user.role)
-          ? [{ href: "/users", label: "Users", icon: <UserIcon size={17} /> }]
-          : []),
-      ],
+      items:
+        session?.user && canManageUsers(session.user.role)
+          ? [
+              { href: "/settings/integrations", label: "Integrations", icon: <PlugIcon size={17} /> },
+              { href: "/users", label: "Users", icon: <UserIcon size={17} /> },
+            ]
+          : [],
     },
-  ];
+  ].filter((group) => group.items.length > 0);
 
   return (
     <div className="flex min-h-screen bg-slate-50">

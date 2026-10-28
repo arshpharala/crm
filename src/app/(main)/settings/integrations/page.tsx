@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isGoogleConfigured } from "@/lib/google";
 import { isWhatsAppConfigured, getWebhookUrl } from "@/lib/whatsapp";
+import { canManageUsers } from "@/lib/permissions";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { CalendarIcon, MessageIcon } from "@/components/icons";
 import { disconnectGoogle } from "./actions";
@@ -20,6 +21,21 @@ export default async function IntegrationsPage({
 }) {
   const { connected, error } = await searchParams;
   const session = await auth();
+
+  if (!session?.user || !canManageUsers(session.user.role)) {
+    return (
+      <div>
+        <PageHeader title="Integrations" />
+        <Card className="p-8 text-center">
+          <p className="text-sm text-slate-500">
+            You don&apos;t have permission to manage integrations. This is restricted to Super Admin,
+            Managing Director, Sales Director, CRM Admin and HR/Operations roles.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   const configured = isGoogleConfigured();
 
   const connection = session?.user

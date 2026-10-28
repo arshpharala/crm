@@ -35,6 +35,7 @@ export async function createProperty(formData: FormData) {
       availability: (formData.get("availability") as PropertyAvailability) || "AVAILABLE",
       listingAgentId: session?.user?.id,
       publicationStatus: "DRAFT",
+      createdById: session?.user?.id ?? null,
     },
   });
 

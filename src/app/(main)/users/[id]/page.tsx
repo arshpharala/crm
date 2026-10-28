@@ -29,6 +29,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   if (!user) notFound();
 
   const isSelf = session.user.id === user.id;
+  const isCurrentTeamLeader = user.team?.leaderId === user.id;
 
   return (
     <div className="grid grid-cols-3 gap-6">
@@ -74,6 +75,18 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
                   <option key={team.id} value={team.id}>{team.name}</option>
                 ))}
               </select>
+            </div>
+            <div className="col-span-2 flex items-center gap-2">
+              <input
+                id="isTeamLeader"
+                name="isTeamLeader"
+                type="checkbox"
+                defaultChecked={isCurrentTeamLeader}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              <label htmlFor="isTeamLeader" className="text-sm text-slate-600">
+                Leader of the selected team
+              </label>
             </div>
             <div className="col-span-2">
               <button className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">

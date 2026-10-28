@@ -21,6 +21,7 @@ export async function createTaskForEntity(formData: FormData) {
       dueDate: dueDateRaw ? new Date(String(dueDateRaw)) : null,
       priority: (formData.get("priority") as TaskPriority) || "MEDIUM",
       assigneeId: String(formData.get("assigneeId") ?? "") || session?.user?.id,
+      createdById: session?.user?.id ?? null,
       leadId,
       contactId,
       dealId,
@@ -34,6 +35,7 @@ export async function createTaskForEntity(formData: FormData) {
 }
 
 export async function createTask(formData: FormData) {
+  const session = await auth();
   const title = String(formData.get("title") ?? "").trim();
   if (!title) throw new Error("Title is required");
   const dueDateRaw = formData.get("dueDate");
@@ -45,6 +47,7 @@ export async function createTask(formData: FormData) {
       dueDate: dueDateRaw ? new Date(String(dueDateRaw)) : null,
       priority: (formData.get("priority") as TaskPriority) || "MEDIUM",
       assigneeId: String(formData.get("assigneeId") ?? "") || null,
+      createdById: session?.user?.id ?? null,
     },
   });
   revalidatePath("/tasks");

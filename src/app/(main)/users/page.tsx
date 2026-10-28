@@ -62,7 +62,12 @@ export default async function UsersPage() {
                 </Td>
                 <Td className="text-slate-600">{user.email}</Td>
                 <Td className="text-slate-600">{user.role.replaceAll("_", " ")}</Td>
-                <Td className="text-slate-600">{user.team?.name ?? "-"}</Td>
+                <Td className="text-slate-600">
+                  <span className="inline-flex items-center gap-2">
+                    {user.team?.name ?? "-"}
+                    {user.team?.leaderId === user.id && <Badge color="indigo" dot>Leader</Badge>}
+                  </span>
+                </Td>
                 <Td>
                   <Badge color={user.active ? "green" : "slate"} dot>{user.active ? "Active" : "Inactive"}</Badge>
                 </Td>

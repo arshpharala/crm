@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { leadWhereForScope } from "@/lib/permissions";
 import { Badge, EmptyState, LinkButton, PageHeader, PersonChip, Td, Th, TableShell } from "@/components/ui";
 import { PlusIcon, TargetIcon } from "@/components/icons";
 
 const TEMP_COLORS: Record<string, string> = { HOT: "red", WARM: "amber", COLD: "blue" };
 
 export default async function LeadsPage() {
+  const session = await auth();
+  const sessionUser = session?.user?.id
+    ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true, role: true, teamId: true } })
+    : null;
+
   const leads = await prisma.lead.findMany({
+    where: sessionUser ? leadWhereForScope(sessionUser) : { id: "__none__" },
     orderBy: { createdAt: "desc" },
     include: { assignedAgent: true },
     take: 100,

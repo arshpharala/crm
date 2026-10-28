@@ -216,10 +216,18 @@ model User {
   tasks               Task[]        @relation("TaskAssignee")
   activities          Activity[]    @relation("ActivityAuthor")
   leadsAssignedByMe   Lead[]        @relation("AssignedBy")
+  createdLeads        Lead[]        @relation("LeadCreator")
+  createdContacts     Contact[]     @relation("ContactCreator")
+  createdDeals        Deal[]        @relation("DealCreator")
+  createdProperties   Property[]    @relation("PropertyCreator")
+  createdTasks        Task[]        @relation("TaskCreator")
+  createdCompanies    Company[]     @relation("CompanyCreator")
+  createdProjects     Project[]     @relation("ProjectCreator")
   organizedMeetings   Meeting[]     @relation("MeetingOrganizer")
   googleConnection    GoogleConnection?
   assignedConversations WhatsAppConversation[] @relation("ConversationAgent")
   sentWhatsAppMessages  WhatsAppMessage[]       @relation("MessageAuthor")
+  ledTeam             Team?         @relation("TeamLeader")
 }
 
 model GoogleConnection {
@@ -238,9 +246,11 @@ model GoogleConnection {
 }
 
 model Team {
-  id      String @id @default(cuid())
-  name    String
-  members User[]
+  id       String  @id @default(cuid())
+  name     String
+  leaderId String? @unique
+  leader   User?   @relation("TeamLeader", fields: [leaderId], references: [id])
+  members  User[]
 }
 
 model Lead {
@@ -285,6 +295,8 @@ model Lead {
   assignedAgent   User?   @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
   assignedById    String?
   assignedBy      User?   @relation("AssignedBy", fields: [assignedById], references: [id])
+  createdById     String?
+  createdBy       User?   @relation("LeadCreator", fields: [createdById], references: [id])
 
   convertedContactId String?  @unique
   convertedContact   Contact? @relation(fields: [convertedContactId], references: [id])
@@ -322,6 +334,9 @@ model Contact {
   activities Activity[]
   meetings   Meeting[]
   whatsappConversations WhatsAppConversation[]
+
+  createdById String?
+  createdBy   User?   @relation("ContactCreator", fields: [createdById], references: [id])
 }
 
 model Company {
@@ -338,6 +353,9 @@ model Company {
   commissionTerms    String?
   rating             Int?
   notes              String?
+
+  createdById String?
+  createdBy   User?   @relation("CompanyCreator", fields: [createdById], references: [id])
 
   projects  Project[]
 }
@@ -362,6 +380,9 @@ model Project {
   commissionRate   Float?
 
   properties Property[]
+
+  createdById String?
+  createdBy   User?   @relation("ProjectCreator", fields: [createdById], references: [id])
 }
 
 model Property {
@@ -412,6 +433,9 @@ model Property {
   internalNotes       String?
 
   deals Deal[]
+
+  createdById String?
+  createdBy   User?   @relation("PropertyCreator", fields: [createdById], references: [id])
 }
 
 model Deal {
@@ -437,6 +461,9 @@ model Deal {
   closedAt         DateTime?
   lostReason       String?
 
+  createdById String?
+  createdBy   User?   @relation("DealCreator", fields: [createdById], references: [id])
+
   tasks      Task[]
   activities Activity[]
   meetings   Meeting[]
@@ -457,6 +484,9 @@ model Task {
 
   assigneeId String?
   assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  createdById String?
+  createdBy   User?   @relation("TaskCreator", fields: [createdById], references: [id])
 
   leadId    String?
   lead      Lead?    @relation(fields: [leadId], references: [id])

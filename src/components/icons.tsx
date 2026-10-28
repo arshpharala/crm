@@ -88,6 +88,15 @@ export const MessageIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const UsersGroupIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="9" cy="8" r="3" />
+    <path d="M3.5 19.5a5.5 5.5 0 0 1 11 0" />
+    <circle cx="17" cy="9" r="2.5" />
+    <path d="M15.5 13a4.5 4.5 0 0 1 5 4.2" />
+  </Icon>
+);
+
 export const PlugIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M9 3v4M15 3v4" />

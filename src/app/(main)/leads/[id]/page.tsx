@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { Badge, Card, LinkButton, PageHeader, PersonChip, SectionTitle, inputClass } from "@/components/ui";
 import { AutoSubmitSelect } from "@/components/auto-submit-select";
 import { CalendarIcon } from "@/components/icons";
 import { addLeadActivity, assignLead, convertLeadToContact, updateLeadStage } from "../actions";
 import { createTaskForEntity } from "../../tasks/actions";
+import { canEditLead, canEditAnyLead, assignableAgentsWhere } from "@/lib/permissions";
+import { EditLeadDetails } from "./edit-lead-details";
 
 const STAGES = [
   "NEW", "UNASSIGNED", "ASSIGNED", "FIRST_CONTACT_PENDING", "CONTACT_ATTEMPTED", "CONTACTED",
@@ -16,20 +19,43 @@ const STAGES = [
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const session = await auth();
+  const userRole = session?.user?.role;
+  const userId = session?.user?.id;
+
+  const sessionUser = userId
+    ? await prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, teamId: true } })
+    : null;
 
   const [lead, agents] = await Promise.all([
     prisma.lead.findUnique({
       where: { id },
       include: {
         assignedAgent: true,
+        createdBy: { select: { id: true, name: true } },
         activities: { orderBy: { createdAt: "desc" }, include: { author: true } },
         tasks: { orderBy: { dueDate: "asc" } },
       },
     }),
-    prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    prisma.user.findMany({
+      where: sessionUser ? assignableAgentsWhere(sessionUser) : { active: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   if (!lead) notFound();
+
+  // Permission: can this user edit lead details?
+  const hasEditPermission = userRole
+    ? canEditAnyLead(userRole) ||
+      (canEditLead(userRole) && lead.assignedAgentId === userId)
+    : false;
+
+  // Is the current user an "own"-scope agent?
+  const isAgentScope = userRole ? (
+    ["AGENT", "TELECALLER", "REFERRAL_PARTNER"].includes(userRole)
+  ) : false;
+  const isAssignedToSelf = lead.assignedAgentId === userId;
 
   return (
     <div className="grid grid-cols-3 gap-6">
@@ -55,15 +81,28 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           }
         />
 
+        {/* Lead Details — editable for authorised roles, read-only for others */}
         <Card className="p-6">
-          <div className="grid grid-cols-2 gap-5 text-sm">
-            <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Phone</p><p className="font-medium text-slate-900">{lead.phone}</p></div>
-            <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Email</p><p className="font-medium text-slate-900">{lead.email ?? "-"}</p></div>
-            <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Country</p><p className="font-medium text-slate-900">{lead.country ?? "-"}</p></div>
-            <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Source</p><p className="font-medium text-slate-900">{lead.source.replaceAll("_", " ")}</p></div>
-            <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Interest</p><p className="font-medium text-slate-900">{lead.propertyInterest ?? "-"}</p></div>
-            <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Budget</p><p className="font-medium text-slate-900">{lead.currency} {lead.budgetMin ?? "?"} - {lead.budgetMax ?? "?"}</p></div>
+          <div className="mb-4 flex items-center justify-between">
+            <SectionTitle>Lead Details</SectionTitle>
+            {!hasEditPermission && (
+              <span className="text-xs text-slate-400">Read-only</span>
+            )}
           </div>
+
+          {hasEditPermission ? (
+            <EditLeadDetails lead={lead} />
+          ) : (
+            <div className="grid grid-cols-2 gap-5 text-sm">
+              <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Phone</p><p className="font-medium text-slate-900">{lead.phone}</p></div>
+              <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Email</p><p className="font-medium text-slate-900">{lead.email ?? "-"}</p></div>
+              <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Country</p><p className="font-medium text-slate-900">{lead.country ?? "-"}</p></div>
+              <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Source</p><p className="font-medium text-slate-900">{lead.source.replaceAll("_", " ")}</p></div>
+              <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Interest</p><p className="font-medium text-slate-900">{lead.propertyInterest ?? "-"}</p></div>
+              <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Budget</p><p className="font-medium text-slate-900">{lead.currency} {lead.budgetMin ?? "?"} – {lead.budgetMax ?? "?"}</p></div>
+              <div><p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">Purpose</p><p className="font-medium text-slate-900">{lead.purpose?.replaceAll("_", " ") ?? "-"}</p></div>
+            </div>
+          )}
         </Card>
 
         <Card className="p-6">
@@ -134,19 +173,50 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
         <Card className="p-6">
           <SectionTitle>Assigned Agent</SectionTitle>
-          {lead.assignedAgent && (
+          {lead.assignedAgent ? (
             <div className="mb-3">
               <PersonChip name={lead.assignedAgent.name} />
             </div>
+          ) : (
+            <p className="mb-3 text-sm text-slate-400">Unassigned</p>
           )}
-          <form action={async (formData) => { "use server"; await assignLead(lead.id, formData.get("agentId") as string); }}>
-            <AutoSubmitSelect name="agentId" defaultValue={lead.assignedAgentId ?? ""} className={inputClass}>
-              <option value="">Unassigned</option>
-              {agents.map((agent) => (
-                <option key={agent.id} value={agent.id}>{agent.name}</option>
-              ))}
-            </AutoSubmitSelect>
-          </form>
+
+          {/* Admins / managers: full dropdown */}
+          {!isAgentScope && (
+            <form action={async (formData) => { "use server"; await assignLead(lead.id, formData.get("agentId") as string); }}>
+              <AutoSubmitSelect name="agentId" defaultValue={lead.assignedAgentId ?? ""} className={inputClass}>
+                <option value="">Unassigned</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>{agent.name}</option>
+                ))}
+              </AutoSubmitSelect>
+            </form>
+          )}
+
+          {/* Agents: can only assign to themselves or unassign themselves */}
+          {isAgentScope && (
+            <div className="space-y-2">
+              {!isAssignedToSelf ? (
+                <form action={async () => { "use server"; await assignLead(lead.id, userId!); }}>
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg border border-indigo-300 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+                  >
+                    Assign to Me
+                  </button>
+                </form>
+              ) : (
+                <form action={async () => { "use server"; await assignLead(lead.id, ""); }}>
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    Unassign Myself
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
         </Card>
 
         <Card className="p-6">
@@ -154,6 +224,26 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <Badge color={lead.temperature === "HOT" ? "red" : lead.temperature === "WARM" ? "amber" : "blue"} dot>
             {lead.temperature}
           </Badge>
+        </Card>
+
+        <Card className="p-6">
+          <SectionTitle>Lead Info</SectionTitle>
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">Created By</p>
+              <p className="font-medium text-slate-900">
+                {lead.createdBy?.name ?? <span className="text-slate-400">—</span>}
+              </p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">Created At</p>
+              <p className="font-medium text-slate-900">{lead.createdAt.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-slate-400">Source</p>
+              <p className="font-medium text-slate-900">{lead.source.replaceAll("_", " ")}</p>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

@@ -1,10 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function createDeveloper(formData: FormData) {
+  const session = await auth();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) throw new Error("Name is required");
 
@@ -16,6 +18,7 @@ export async function createDeveloper(formData: FormData) {
       registrationStatus: String(formData.get("registrationStatus") ?? "") || null,
       commissionTerms: String(formData.get("commissionTerms") ?? "") || null,
       notes: String(formData.get("notes") ?? "") || null,
+      createdById: session?.user?.id ?? null,
     },
   });
 
@@ -24,6 +27,7 @@ export async function createDeveloper(formData: FormData) {
 }
 
 export async function createProject(formData: FormData) {
+  const session = await auth();
   const developerId = String(formData.get("developerId"));
   const name = String(formData.get("name") ?? "").trim();
   if (!name || !developerId) throw new Error("Name and developer are required");
@@ -45,6 +49,7 @@ export async function createProject(formData: FormData) {
       startingPrice: startingPrice ? Number(startingPrice) : null,
       paymentPlan: String(formData.get("paymentPlan") ?? "") || null,
       amenities: String(formData.get("amenities") ?? "") || null,
+      createdById: session?.user?.id ?? null,
     },
   });
 

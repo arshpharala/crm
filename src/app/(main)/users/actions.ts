@@ -38,8 +38,9 @@ export async function createUser(formData: FormData) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const teamId = String(formData.get("teamId") ?? "") || null;
+  const isTeamLeader = formData.get("isTeamLeader") === "on";
 
-  await prisma.user.create({
+  const created = await prisma.user.create({
     data: {
       name,
       email,
@@ -49,6 +50,10 @@ export async function createUser(formData: FormData) {
       teamId,
     },
   });
+
+  if (isTeamLeader && teamId) {
+    await prisma.team.update({ where: { id: teamId }, data: { leaderId: created.id } });
+  }
 
   revalidatePath("/users");
   redirect("/users");
@@ -63,6 +68,7 @@ export async function updateUser(formData: FormData) {
   if (!name || !role) throw new Error("Name and role are required");
 
   const teamId = String(formData.get("teamId") ?? "") || null;
+  const isTeamLeader = formData.get("isTeamLeader") === "on";
 
   await prisma.user.update({
     where: { id: userId },
@@ -74,8 +80,16 @@ export async function updateUser(formData: FormData) {
     },
   });
 
+  // Clear leadership of any team this user currently leads (handles team change / unchecking),
+  // then re-apply if the admin still wants them leading the (possibly new) selected team.
+  await prisma.team.updateMany({ where: { leaderId: userId }, data: { leaderId: null } });
+  if (isTeamLeader && teamId) {
+    await prisma.team.update({ where: { id: teamId }, data: { leaderId: userId } });
+  }
+
   revalidatePath("/users");
   revalidatePath(`/users/${userId}`);
+  revalidatePath("/team");
 }
 
 export async function toggleUserActive(userId: string, active: boolean) {

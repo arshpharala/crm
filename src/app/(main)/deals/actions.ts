@@ -24,6 +24,7 @@ export async function createDeal(formData: FormData) {
       value: value ? Number(value) : null,
       currency: String(formData.get("currency") ?? "AED"),
       agentId: session?.user?.id,
+      createdById: session?.user?.id ?? null,
     },
   });
 

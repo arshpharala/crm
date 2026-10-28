@@ -82,3 +82,44 @@ export function can(role: Role, module: keyof ModulePermissions): Scope {
 export function canManageUsers(role: Role): boolean {
   return ROLE_PERMISSIONS[role].users !== "none";
 }
+
+/** Roles that can edit lead details (not just view) */
+export function canEditLead(role: Role): boolean {
+  const scope = ROLE_PERMISSIONS[role].leads;
+  // "all" or "team" = full edit rights; "own" = agents can edit their own leads
+  return scope === "all" || scope === "team" || scope === "own";
+}
+
+/** Roles that can edit any lead (not limited to own/team) */
+export function canEditAnyLead(role: Role): boolean {
+  return ROLE_PERMISSIONS[role].leads === "all";
+}
+
+/** Roles that lead a team: they manage their team's roster and reassign the team's leads. */
+export function canManageTeam(role: Role): boolean {
+  return role === "TEAM_LEADER" || role === "SALES_MANAGER";
+}
+
+export type ScopedUser = { id: string; role: Role; teamId: string | null };
+
+/**
+ * Prisma `where` clause restricting the Leads list/queries to what a team leader
+ * (or sales manager) should see: their own team's leads, plus the shared unassigned pool.
+ * Other roles are unrestricted here — only team-scoped roles are gated.
+ */
+export function leadWhereForScope(user: ScopedUser) {
+  if (canManageTeam(user.role)) {
+    return user.teamId
+      ? { OR: [{ assignedAgent: { teamId: user.teamId } }, { assignedAgentId: null }] }
+      : { assignedAgentId: user.id };
+  }
+  return {};
+}
+
+/** Users selectable as a lead's assignee: team-scoped roles can only assign within their own team. */
+export function assignableAgentsWhere(user: ScopedUser) {
+  if (canManageTeam(user.role)) {
+    return { active: true, teamId: user.teamId ?? "__none__" };
+  }
+  return { active: true };
+}

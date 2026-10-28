@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function createContact(formData: FormData) {
+  const session = await auth();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   if (!fullName || !phone) throw new Error("Full name and phone are required");
@@ -25,6 +26,7 @@ export async function createContact(formData: FormData) {
       budgetMax: budgetMax ? Number(budgetMax) : null,
       propertyPreferences: String(formData.get("propertyPreferences") ?? "") || null,
       notes: String(formData.get("notes") ?? "") || null,
+      createdById: session?.user?.id ?? null,
     },
   });
 

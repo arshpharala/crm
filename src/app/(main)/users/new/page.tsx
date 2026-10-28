@@ -62,6 +62,13 @@ export default async function NewUserPage() {
               </select>
             </div>
 
+            <div className="col-span-2 flex items-center gap-2">
+              <input id="isTeamLeader" name="isTeamLeader" type="checkbox" className="h-4 w-4 rounded border-slate-300" />
+              <label htmlFor="isTeamLeader" className="text-sm text-slate-600">
+                Make this user the leader of the selected team
+              </label>
+            </div>
+
             <div className="col-span-2 mt-2">
               <SubmitButton>Create User</SubmitButton>
             </div>

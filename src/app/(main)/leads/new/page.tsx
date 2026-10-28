@@ -1,109 +1,17 @@
 import { prisma } from "@/lib/prisma";
-import { createLead } from "../actions";
-import { Card, PageHeader, SubmitButton, inputClass, labelClass } from "@/components/ui";
+import { auth } from "@/auth";
+import { assignableAgentsWhere } from "@/lib/permissions";
+import { NewLeadForm } from "./new-lead-form";
 
 export default async function NewLeadPage() {
-  const agents = await prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" } });
+  const session = await auth();
+  const sessionUser = session?.user?.id
+    ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true, role: true, teamId: true } })
+    : null;
 
-  return (
-    <div className="max-w-2xl">
-      <PageHeader title="New Lead" />
-      <Card className="p-6">
-        <form action={createLead} className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className={labelClass} htmlFor="fullName">Full Name *</label>
-            <input id="fullName" name="fullName" required className={inputClass} />
-          </div>
-
-          <div>
-            <label className={labelClass} htmlFor="phone">Phone *</label>
-            <input id="phone" name="phone" required className={inputClass} placeholder="+971 5xx xxx xxx" />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" className={inputClass} />
-          </div>
-
-          <div>
-            <label className={labelClass} htmlFor="country">Country of Residence</label>
-            <input id="country" name="country" className={inputClass} placeholder="UAE, UK, USA, Canada, India..." />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="preferredLanguage">Preferred Language</label>
-            <input id="preferredLanguage" name="preferredLanguage" className={inputClass} />
-          </div>
-
-          <div>
-            <label className={labelClass} htmlFor="source">Lead Source</label>
-            <select id="source" name="source" className={inputClass} defaultValue="MANUAL">
-              {[
-                "WEBSITE", "LANDING_PAGE", "GOOGLE_ADS", "META_ADS", "WHATSAPP", "EMAIL",
-                "BAYUT", "DUBIZZLE", "PROPERTY_FINDER", "GOOGLE_BUSINESS", "LINKEDIN",
-                "QR_CODE", "REFERRAL", "WALK_IN", "PHONE_CALL", "EXHIBITION",
-                "DEVELOPER_EVENT", "MANUAL", "CSV_IMPORT", "THIRD_PARTY", "API_WEBHOOK", "OTHER",
-              ].map((s) => (
-                <option key={s} value={s}>{s.replaceAll("_", " ")}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="temperature">Temperature</label>
-            <select id="temperature" name="temperature" className={inputClass} defaultValue="WARM">
-              <option value="HOT">Hot</option>
-              <option value="WARM">Warm</option>
-              <option value="COLD">Cold</option>
-            </select>
-          </div>
-
-          <div className="col-span-2">
-            <label className={labelClass} htmlFor="propertyInterest">Property / Project of Interest</label>
-            <input id="propertyInterest" name="propertyInterest" className={inputClass} />
-          </div>
-
-          <div>
-            <label className={labelClass} htmlFor="budgetMin">Budget Min</label>
-            <input id="budgetMin" name="budgetMin" type="number" className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="budgetMax">Budget Max</label>
-            <input id="budgetMax" name="budgetMax" type="number" className={inputClass} />
-          </div>
-
-          <div>
-            <label className={labelClass} htmlFor="currency">Currency</label>
-            <select id="currency" name="currency" className={inputClass} defaultValue="AED">
-              {["AED", "USD", "GBP", "CAD", "INR", "PKR", "NPR"].map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelClass} htmlFor="purpose">Investment Purpose</label>
-            <select id="purpose" name="purpose" className={inputClass} defaultValue="">
-              <option value="">-</option>
-              <option value="SELF_USE">Self use</option>
-              <option value="RENTAL_INCOME">Rental income</option>
-              <option value="CAPITAL_APPRECIATION">Capital appreciation</option>
-              <option value="RELOCATION">Relocation</option>
-              <option value="RESALE">Resale</option>
-            </select>
-          </div>
-
-          <div className="col-span-2">
-            <label className={labelClass} htmlFor="assignedAgentId">Assign To</label>
-            <select id="assignedAgentId" name="assignedAgentId" className={inputClass} defaultValue="">
-              <option value="">Unassigned</option>
-              {agents.map((agent) => (
-                <option key={agent.id} value={agent.id}>{agent.name} ({agent.role.replaceAll("_", " ")})</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-span-2 mt-2">
-            <SubmitButton>Create Lead</SubmitButton>
-          </div>
-        </form>
-      </Card>
-    </div>
-  );
+  const agents = await prisma.user.findMany({
+    where: sessionUser ? assignableAgentsWhere(sessionUser) : { active: true },
+    orderBy: { name: "asc" },
+  });
+  return <NewLeadForm agents={agents} />;
 }

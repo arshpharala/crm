@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { auth, signOut } from "@/auth";
 import { NavLink } from "@/components/nav-link";
 import { Avatar } from "@/components/ui";
-import { canManageUsers } from "@/lib/permissions";
+import { canManageUsers, canManageTeam } from "@/lib/permissions";
 import {
   GridIcon,
   TargetIcon,
@@ -14,6 +14,7 @@ import {
   CalendarIcon,
   MessageIcon,
   PlugIcon,
+  UsersGroupIcon,
   LogOutIcon,
 } from "@/components/icons";
 
@@ -34,6 +35,9 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
         { href: "/deals", label: "Deals", icon: <BriefcaseIcon size={17} /> },
         { href: "/properties", label: "Properties", icon: <BuildingIcon size={17} /> },
         { href: "/developers", label: "Developers & Projects", icon: <Building2Icon size={17} /> },
+        ...(session?.user && canManageTeam(session.user.role)
+          ? [{ href: "/team", label: "My Team", icon: <UsersGroupIcon size={17} /> }]
+          : []),
       ],
     },
     {

@@ -15,6 +15,7 @@ import {
   MessageIcon,
   PlugIcon,
   UsersGroupIcon,
+  SparkleIcon,
   LogOutIcon,
 } from "@/components/icons";
 
@@ -46,6 +47,7 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
         { href: "/tasks", label: "Tasks", icon: <CheckSquareIcon size={17} /> },
         { href: "/meetings", label: "Meetings", icon: <CalendarIcon size={17} /> },
         { href: "/whatsapp", label: "WhatsApp Inbox", icon: <MessageIcon size={17} /> },
+        { href: "/assistant", label: "AI Assistant", icon: <SparkleIcon size={17} /> },
       ],
     },
     {

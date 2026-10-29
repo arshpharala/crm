@@ -1,10 +1,20 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, PageHeader, SectionTitle, inputClass, labelClass } from "@/components/ui";
+import { SparkleIcon } from "@/components/icons";
 import { createProject } from "../actions";
+import { refreshDeveloperProjectsWithAI } from "../ai-actions";
+import { isAIConfigured } from "@/lib/ai";
 
-export default async function DeveloperDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DeveloperDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ ai_added?: string; ai_skipped?: string; ai_error?: string }>;
+}) {
   const { id } = await params;
+  const { ai_added, ai_skipped, ai_error } = await searchParams;
 
   const developer = await prisma.company.findUnique({
     where: { id },
@@ -16,7 +26,29 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
   return (
     <div className="grid grid-cols-3 gap-6">
       <div className="col-span-2 space-y-6">
-        <PageHeader title={developer.name} />
+        <PageHeader
+          title={developer.name}
+          action={
+            isAIConfigured() ? (
+              <form action={async () => { "use server"; await refreshDeveloperProjectsWithAI(developer.id); }}>
+                <button className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100">
+                  <SparkleIcon size={16} /> Refresh Projects via AI
+                </button>
+              </form>
+            ) : undefined
+          }
+        />
+
+        {ai_added !== undefined && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            AI research added {ai_added} new project{ai_added === "1" ? "" : "s"}
+            {ai_skipped && Number(ai_skipped) > 0 ? ` (skipped ${ai_skipped} already on file)` : ""}. Review the details below —
+            AI-sourced data should be verified before sharing with clients.
+          </div>
+        )}
+        {ai_error && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{ai_error}</div>
+        )}
 
         <Card className="p-6">
           <div className="grid grid-cols-2 gap-4 text-sm">

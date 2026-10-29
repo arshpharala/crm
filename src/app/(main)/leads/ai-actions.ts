@@ -1,7 +1,9 @@
 "use server";
 
+import type Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 import { getAnthropicClient, isAIConfigured, AI_MODEL } from "@/lib/ai";
 
 export type PropertyMatch = {
@@ -130,4 +132,55 @@ Return up to 5 matches, best first. Only include properties that are a reasonabl
     console.error("findMatchingProperties error:", err);
     return { matches: [], error: "AI matching request failed. Please try again." };
   }
+}
+
+export async function enrichLeadWithAI(leadId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  if (!isAIConfigured()) throw new Error("AI isn't configured yet. Add ANTHROPIC_API_KEY to your .env file.");
+
+  const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+  if (!lead) throw new Error("Lead not found.");
+
+  const prompt = `You are helping a Dubai real estate agent prepare for a first call with a new lead. Search the web for PUBLIC, professional, business-relevant information about this person that could help the agent — e.g. employer/company, industry, professional background, or public investment/business activity.
+
+Do not search for or report private details such as home address or family information, and never guess or invent anything — only report what you actually find, with a brief note of where it came from. If you find nothing meaningful, say so plainly in one sentence rather than speculating.
+
+Lead:
+- Name: ${lead.fullName}
+- Phone: ${lead.phone}
+- Email: ${lead.email ?? "not provided"}
+- Country: ${lead.country ?? "not provided"}`;
+
+  let summary: string;
+  try {
+    const client = getAnthropicClient();
+    const response = await client.messages.create({
+      model: AI_MODEL,
+      max_tokens: 1024,
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    summary =
+      response.content
+        .filter((block): block is Anthropic.TextBlock => block.type === "text")
+        .map((block) => block.text)
+        .join("\n")
+        .trim() || "No findings.";
+  } catch (err) {
+    console.error("enrichLeadWithAI error:", err);
+    throw new Error("AI enrichment request failed. Please try again.");
+  }
+
+  await prisma.activity.create({
+    data: {
+      type: "NOTE",
+      content: `AI Web Enrichment:\n${summary}`,
+      authorId: session.user.id,
+      leadId,
+    },
+  });
+
+  revalidatePath(`/leads/${leadId}`);
 }

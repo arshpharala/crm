@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Badge, Card, LinkButton, PageHeader, PersonChip, SectionTitle, inputClass } from "@/components/ui";
 import { AutoSubmitSelect } from "@/components/auto-submit-select";
-import { CalendarIcon } from "@/components/icons";
+import { CalendarIcon, SparkleIcon } from "@/components/icons";
 import { addLeadActivity, assignLead, convertLeadToContact, updateLeadStage } from "../actions";
+import { enrichLeadWithAI } from "../ai-actions";
 import { createTaskForEntity } from "../../tasks/actions";
 import { canEditLead, canEditAnyLead, assignableAgentsWhere } from "@/lib/permissions";
 import { isAIConfigured } from "@/lib/ai";
@@ -67,6 +68,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           subtitle={lead.phone}
           action={
             <div className="flex items-center gap-3">
+              {isAIConfigured() && (
+                <form action={async () => { "use server"; await enrichLeadWithAI(lead.id); }}>
+                  <button className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100">
+                    <SparkleIcon size={16} /> Enrich with AI
+                  </button>
+                </form>
+              )}
               <LinkButton href={`/meetings/new?leadId=${lead.id}`} variant="secondary">
                 <CalendarIcon size={16} /> Schedule Meeting
               </LinkButton>
